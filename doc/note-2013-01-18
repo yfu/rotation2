@@ -1,0 +1,44 @@
+There are lots of binding sites that are predicted using computational method (by looking for motifs) but in experiments they are not always found bound by TFs. One possible explanation is that some parts of the genome is not accessible. They may have NARs (nucleoid associated proteins) wrapped around the those regions. These NARs may have similar functions with histones.
+      1	  2    3  4	  5	6    7	 8	   9	 10	       11
+TF1   _	  _       _	  x	_    _	 _	    	  	       _
+TF2   x	  x    _  x	  x	_    _	 _	   x	 x	       x
+TF3   x	       _  x	  _	_    _	  	   _	 x	       x
+
+Why are regions not bound even they have the pattern for the TF?
+(underscore means there is a computationally predicted binding site; and 'x' means that they are binding sites found in the experiment.)
+
+LSR2 (Rv3597c) may behave like histones.
+
+1. WIKI page:
+http://tuberculosis.bu.edu/wiki/Interaction_Database
+http://tuberculosis.bu.edu/wiki/MatlabChipSeq - how to connect to MySQL from Matlab (you will have implement this before running my code)
+
+Username and Password are both jgalag.
+
+2. Query:
+    SELECT ce.chipped_gene_locus as tf, cr.start as region_start, cr.stop as region_stop, cfp.impulse_coordinate,
+    cfp.impulse_height/ce.mean_coverage as impulse_height, GROUP_CONCAT(to_gene_locus) as targets
+    FROM chip_experiments ce 
+    JOIN chip_regions cr ON cr.chip_experiment_id = ce.id 
+    JOIN csdeconv_final_peaks cfp ON cfp.chip_region_id = cr.id 
+    JOIN chip_binding cb ON cb.refined_peak_id = cfp.id 
+    JOIN interactions i ON i.id = cb.id 
+    WHERE cr.passes_filter = 1 AND cr.lsr2_filtered = 0 AND cr.shift_filtered = 0 AND cr.wt_filtered = 0 #region quality control
+    AND ce.chipped_gene_locus LIKE 'Rv%' #include only MTB as the organism
+    AND ce.include_in_network2 = 1 #include only good experiments
+    AND cfp.impulse_height/ce.mean_coverage >= 1 #binding site quality control
+    AND i.by_operon = 0 #do not use operon structure to find target genes
+    GROUP BY cfp.id 
+    ORDER BY ce.chipped_gene_locus, cfp.impulse_height DESC
+
+3. Matlab code is attached.
+
+Genome View software program can provide a pileup view of different features.
+
+
+
+There may be different views toward the explanation, from sequences and evolution.
+
+For the rotation, just look for possible correlations from the view of sequences. Like, there may be other binding sites nearby that are bound by other factors. It is also possible that there are spatial interactions. Another possibility is that there are differences of GC contents.
+
+lsr2 = Rv3597c

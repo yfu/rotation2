@@ -1,0 +1,1 @@
+mysql( 'open', 'tuberculosis.bu.edu:3306', 'jgalag','jgalag' )
